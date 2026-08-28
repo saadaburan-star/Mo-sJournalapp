@@ -187,6 +187,14 @@ strips the flag, so anything the writer actually touches becomes theirs and
 syncs normally. Deleting a seeded entry removes it outright on that device;
 there is nothing remote to tell.
 
+**Today's entry is in the archive too**, as soon as it has been saved. The
+pinned row at the top of the panel says which day you are on; it is not a record
+that the day has been written. Leaving today out of the list meant that on a
+diary with no past entries, saving your first entry left the archive reading
+"No entries yet." — which reads exactly like the save failing. Delete is not
+offered on today's row: the day is still open in the writing surface, so the
+next autosave would simply write it back.
+
 **Deleting leaves a tombstone.** A deleted day becomes a `{ date, deleted: true,
 updatedAt }` record rather than vanishing, because the deletion is itself a
 change that has to reach the other devices. A plain local delete would be undone

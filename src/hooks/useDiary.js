@@ -288,18 +288,19 @@ export default function useDiary() {
 
   /* ---- Archive ------------------------------------------------------- */
 
-  // Today is pinned at the top of the panel as the entry being written, so
-  // the month list below is past days only.
-  const pastEntries = useMemo(
-    () => entries.filter((entry) => entry.date !== date),
-    [entries, date],
-  );
-
+  // Today's entry belongs in the archive as soon as it has been saved. The
+  // pinned row at the top of the panel says which day you are on; it is not a
+  // record that the day has been written. Leaving today out of the list meant
+  // that on a diary with no past entries, saving your first entry left the
+  // archive reading "No entries yet." — which says the save failed.
+  //
+  // `entries` only ever holds persisted entries, so today appears here once it
+  // has actually been written to storage, and not before.
   const searching = query.trim().length > 0;
 
   const visibleEntries = useMemo(
-    () => filterEntries(pastEntries, query),
-    [pastEntries, query],
+    () => filterEntries(entries, query),
+    [entries, query],
   );
 
   // A search auto-unfolds matching months; clearing it restores the fold

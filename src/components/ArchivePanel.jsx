@@ -28,7 +28,7 @@ function groupByMonth(entries) {
   return groups;
 }
 
-function MonthGroup({ group, open, onToggle, openEntryDate, onToggleEntry, onDeleteEntry }) {
+function MonthGroup({ group, open, onToggle, openEntryDate, onToggleEntry, onDeleteEntry, todayDate }) {
   return (
     <div className="month">
       <button
@@ -61,6 +61,7 @@ function MonthGroup({ group, open, onToggle, openEntryDate, onToggleEntry, onDel
               expanded={openEntryDate === entry.date}
               onToggle={() => onToggleEntry(entry.date)}
               onDelete={() => onDeleteEntry(entry.date)}
+              isToday={entry.date === todayDate}
             />
           ))}
         </div>
@@ -69,7 +70,7 @@ function MonthGroup({ group, open, onToggle, openEntryDate, onToggleEntry, onDel
   );
 }
 
-function EntryRow({ entry, expanded, onToggle, onDelete }) {
+function EntryRow({ entry, expanded, onToggle, onDelete, isToday }) {
   const [confirming, setConfirming] = useState(false);
 
   // Collapsing the row puts the question away with it — a confirmation should
@@ -102,7 +103,10 @@ function EntryRow({ entry, expanded, onToggle, onDelete }) {
               </div>
             )}
 
-            {/* Behind a confirmation, in place — a second click, not a modal. */}
+            {/* Behind a confirmation, in place — a second click, not a modal.
+                Not offered for today: the day is still open in the writing
+                surface, so the next autosave would simply write it back. */}
+            {!isToday && (
             <div className="entry-row__actions">
               {confirming ? (
                 <>
@@ -132,6 +136,7 @@ function EntryRow({ entry, expanded, onToggle, onDelete }) {
                 </button>
               )}
             </div>
+            )}
           </div>
         </div>
       </div>
@@ -246,6 +251,7 @@ export default function ArchivePanel({
             openEntryDate={openEntryDate}
             onToggleEntry={onToggleEntry}
             onDeleteEntry={onDeleteEntry}
+            todayDate={todayDate}
           />
         ))}
       </div>
