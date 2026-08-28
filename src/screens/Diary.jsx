@@ -21,6 +21,7 @@ export default function Diary() {
         onToggleMonth={diary.toggleMonth}
         openEntryDate={diary.openEntryDate}
         onToggleEntry={diary.toggleEntry}
+        onDeleteEntry={diary.deleteEntry}
       />
 
       <WritingColumn

@@ -24,12 +24,14 @@ Built with React + Vite, deployed to Netlify.
 - **Background sync** to Netlify Blobs through a second Function, so the same
   diary appears on any device behind the same pin. Local-first: the UI never
   calls the network and never waits on it.
+- **Delete a past day**, behind a confirmation in the row itself, with the
+  deletion syncing to your other devices.
 - **Six seeded past entries**, so the archive and search are real on first open.
 
 ### Not in this build
 
-Rich text formatting, inline images, full-width read mode, and entry deletion.
-Deliberate deferrals — see *Deferred* below.
+Rich text formatting, inline images, and full-width read mode. Deliberate
+deferrals — see *Deferred* below.
 
 ---
 
@@ -172,7 +174,17 @@ store first. Last-write-wins should never mean silently losing writing.
 that generated them — otherwise two devices first opened on different days would
 each contribute their own set of samples to the shared store. Saving an entry
 strips the flag, so anything the writer actually touches becomes theirs and
-syncs normally.
+syncs normally. Deleting a seeded entry removes it outright on that device;
+there is nothing remote to tell.
+
+**Deleting leaves a tombstone.** A deleted day becomes a `{ date, deleted: true,
+updatedAt }` record rather than vanishing, because the deletion is itself a
+change that has to reach the other devices. A plain local delete would be undone
+by the very next pull. Tombstones are hidden from every part of the UI —
+`listEntries()` filters them, and only sync asks for them. A tombstone arriving
+from another device backs the local copy up first, under the reason
+`deleted-elsewhere`, so a deletion made on one device is still recoverable from
+`backups` on the others.
 
 **Entry content is structured data, not HTML strings.** A day holds blocks; a
 block holds text and the timestamp of the sitting that produced it. That is what
@@ -244,7 +256,7 @@ first day you write is entry 7.
 
 ## Deferred
 
-Rich text, inline images, full read mode, delete, and export. End-to-end
+Rich text, inline images, full read mode, and export. End-to-end
 encryption of synced entries, so the host never sees plaintext, is the most
 valuable next step: today Netlify Blobs holds the diary in plain JSON, readable
 by anyone with access to the Netlify account.

@@ -13,7 +13,7 @@
 
 import { listEntries, putBackup, putEntry } from '../storage/index.js';
 import { clearToken, readToken } from './pinGate.js';
-import { entryText } from './entry.js';
+import { entryText, isTombstone } from './entry.js';
 
 const SYNC_ENDPOINT = '/api/sync';
 
@@ -99,7 +99,9 @@ async function cycle() {
 
   try {
     const { manifest } = await call(SYNC_ENDPOINT, { method: 'GET' }, token);
-    const local = await listEntries();
+    // Tombstones included: a deletion is a change like any other, and has to
+    // reach the other devices or they will push the entry straight back.
+    const local = await listEntries({ includeDeleted: true });
     const localByDate = new Map(local.map((entry) => [entry.date, entry]));
 
     const push = local.filter((entry) => {
@@ -136,8 +138,10 @@ async function cycle() {
 
       // Last write wins — but never silently discard a longer local entry for
       // a shorter remote one. The local copy is kept before it is replaced.
+      // A tombstone is the extreme case of shorter, so it is covered too: a
+      // day deleted on another device is recoverable from `backups` here.
       if (localEntry && entryText(localEntry).length > entryText(remoteEntry).length) {
-        await putBackup(localEntry, 'replaced-by-remote');
+        await putBackup(localEntry, isTombstone(remoteEntry) ? 'deleted-elsewhere' : 'replaced-by-remote');
       }
 
       await putEntry(remoteEntry);

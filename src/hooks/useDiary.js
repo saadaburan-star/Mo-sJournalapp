@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { StorageError, filterEntries, listEntries, putEntry } from '../storage/index.js';
+import {
+  StorageError,
+  deleteEntry as removeRecord,
+  filterEntries,
+  getEntry,
+  listEntries,
+  putEntry,
+} from '../storage/index.js';
 import { loadDiary, openToday } from '../lib/diary.js';
 import {
   applyText,
@@ -9,6 +16,7 @@ import {
   entryText,
   hasWriting,
   normaliseTag,
+  tombstoneFor,
 } from '../lib/entry.js';
 import { monthKey, todayISO } from '../lib/date.js';
 import {
@@ -307,6 +315,35 @@ export default function useDiary() {
     [searching],
   );
 
+  /**
+   * Delete a past day, behind a confirmation in the row itself.
+   *
+   * A synced entry leaves a tombstone rather than vanishing: the deletion has
+   * to travel to the other devices, and a plain local delete would be undone
+   * by the next pull. A seeded sample never reached the shared store, so it is
+   * simply removed from this device.
+   */
+  const deleteEntry = useCallback(async (entryDate) => {
+    try {
+      const target = await getEntry(entryDate);
+      if (!target) return;
+
+      if (target.seeded) {
+        await removeRecord(entryDate);
+      } else {
+        await putEntry(tombstoneFor(target));
+        requestSync();
+      }
+
+      setEntries(await listEntries());
+      setOpenEntryDate((current) => (current === entryDate ? '' : current));
+      setStorageNotice('');
+    } catch (error) {
+      const kind = error instanceof StorageError ? error.kind : 'unknown';
+      setStorageNotice(STORAGE_MESSAGES[kind] || STORAGE_MESSAGES.unknown);
+    }
+  }, []);
+
   /** Only one entry is expanded at a time; opening another closes the first. */
   const toggleEntry = useCallback((entryDate) => {
     setOpenEntryDate((current) => (current === entryDate ? '' : entryDate));
@@ -337,5 +374,6 @@ export default function useDiary() {
     toggleMonth,
     openEntryDate,
     toggleEntry,
+    deleteEntry,
   };
 }

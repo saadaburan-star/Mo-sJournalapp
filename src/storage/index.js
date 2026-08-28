@@ -33,7 +33,9 @@ export async function init() {
 /** One entry per calendar day, keyed by ISO date. */
 export async function getEntry(date) {
   const raw = await withStore(STORE_ENTRIES, 'readonly', (store) => store.get(date));
-  return raw ? normaliseEntry(raw) : null;
+  if (!raw) return null;
+  const entry = normaliseEntry(raw);
+  return entry.deleted ? null : entry;
 }
 
 export async function putEntry(entry) {
@@ -42,12 +44,22 @@ export async function putEntry(entry) {
   return record;
 }
 
-/** All entries, newest first. */
-export async function listEntries() {
+/**
+ * All entries, newest first.
+ *
+ * Tombstones — days the writer deleted — are hidden by default, so the whole
+ * UI sees only real entries. Sync passes `includeDeleted` because a deletion
+ * has to travel to the other devices like any other change.
+ */
+export async function listEntries({ includeDeleted = false } = {}) {
   const raw = (await withStore(STORE_ENTRIES, 'readonly', (store) => store.getAll())) || [];
-  return raw.map(normaliseEntry).sort((a, b) => (a.date < b.date ? 1 : -1));
+  return raw
+    .map(normaliseEntry)
+    .filter((entry) => includeDeleted || !entry.deleted)
+    .sort((a, b) => (a.date < b.date ? 1 : -1));
 }
 
+/** Remove a record outright, leaving no tombstone. */
 export async function deleteEntry(date) {
   await withStore(STORE_ENTRIES, 'readwrite', (store) => store.delete(date));
 }

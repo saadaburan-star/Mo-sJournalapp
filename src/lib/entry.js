@@ -55,6 +55,28 @@ export function normaliseEntry(raw) {
     // that generated them — see sync.js. The flag is dropped the moment the
     // writer saves the entry themselves.
     ...(raw.seeded ? { seeded: true } : {}),
+    // A deleted day leaves a tombstone rather than vanishing, so that the
+    // deletion itself syncs. Without one, the next pull from another device
+    // would simply put the entry back.
+    ...(raw.deleted ? { deleted: true } : {}),
+  };
+}
+
+/** A record of a day that was deleted, not a day that was written. */
+export function isTombstone(entry) {
+  return entry.deleted === true;
+}
+
+/** Replace an entry with the marker of its deletion, keeping its identity. */
+export function tombstoneFor(entry) {
+  return {
+    date: entry.date,
+    entryNumber: entry.entryNumber,
+    blocks: [],
+    tags: [],
+    createdAt: entry.createdAt,
+    updatedAt: new Date().toISOString(),
+    deleted: true,
   };
 }
 

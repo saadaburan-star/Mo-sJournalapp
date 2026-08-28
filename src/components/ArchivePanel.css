@@ -252,6 +252,42 @@
   white-space: pre-wrap;
 }
 
+.entry-row__actions {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-14);
+  margin-top: var(--space-14);
+}
+
+/* Quiet by default. Deleting a day should be possible, not inviting. */
+.entry-row__action {
+  font-family: var(--font-ui);
+  font-size: var(--size-label-10);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  padding: 0;
+  transition: color var(--dur-dot) var(--ease-out);
+}
+
+.entry-row__action:hover {
+  color: var(--ink);
+}
+
+.entry-row__action--destructive:hover {
+  color: var(--error);
+}
+
+.entry-row__confirm {
+  font-family: var(--font-ui);
+  font-size: var(--size-label-10);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--error);
+}
+
 .entry-row__tags {
   display: flex;
   flex-wrap: wrap;

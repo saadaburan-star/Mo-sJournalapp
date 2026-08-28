@@ -73,6 +73,12 @@ function validEntry(entry) {
   if (typeof entry.updatedAt !== 'string' || Number.isNaN(Date.parse(entry.updatedAt))) {
     return false;
   }
+
+  // A tombstone records that a day was deleted. It carries no content, and it
+  // travels through the same last-write-wins path as any other change — which
+  // is the only way a deletion on one device reaches the others.
+  if (entry.deleted === true) return true;
+
   if (!Array.isArray(entry.blocks) || !Array.isArray(entry.tags)) return false;
   if (entry.blocks.some((block) => typeof block?.text !== 'string')) return false;
   if (entry.tags.some((tag) => typeof tag !== 'string')) return false;

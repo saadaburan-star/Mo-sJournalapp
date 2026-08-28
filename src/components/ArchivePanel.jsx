@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import TagChip from './TagChip.jsx';
 import {
@@ -28,7 +28,7 @@ function groupByMonth(entries) {
   return groups;
 }
 
-function MonthGroup({ group, open, onToggle, openEntryDate, onToggleEntry }) {
+function MonthGroup({ group, open, onToggle, openEntryDate, onToggleEntry, onDeleteEntry }) {
   return (
     <div className="month">
       <button
@@ -60,6 +60,7 @@ function MonthGroup({ group, open, onToggle, openEntryDate, onToggleEntry }) {
               entry={entry}
               expanded={openEntryDate === entry.date}
               onToggle={() => onToggleEntry(entry.date)}
+              onDelete={() => onDeleteEntry(entry.date)}
             />
           ))}
         </div>
@@ -68,7 +69,13 @@ function MonthGroup({ group, open, onToggle, openEntryDate, onToggleEntry }) {
   );
 }
 
-function EntryRow({ entry, expanded, onToggle }) {
+function EntryRow({ entry, expanded, onToggle, onDelete }) {
+  const [confirming, setConfirming] = useState(false);
+
+  // Collapsing the row puts the question away with it — a confirmation should
+  // never be waiting somewhere the writer has stopped looking.
+  if (!expanded && confirming) setConfirming(false);
+
   return (
     <div className={`entry-row${expanded ? ' entry-row--expanded' : ''}`}>
       <button
@@ -94,6 +101,37 @@ function EntryRow({ entry, expanded, onToggle }) {
                 ))}
               </div>
             )}
+
+            {/* Behind a confirmation, in place — a second click, not a modal. */}
+            <div className="entry-row__actions">
+              {confirming ? (
+                <>
+                  <span className="entry-row__confirm">Delete this day?</span>
+                  <button
+                    type="button"
+                    className="entry-row__action entry-row__action--destructive"
+                    onClick={onDelete}
+                  >
+                    Delete
+                  </button>
+                  <button
+                    type="button"
+                    className="entry-row__action"
+                    onClick={() => setConfirming(false)}
+                  >
+                    Keep
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className="entry-row__action"
+                  onClick={() => setConfirming(true)}
+                >
+                  Delete
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -110,6 +148,7 @@ export default function ArchivePanel({
   onToggleMonth,
   openEntryDate,
   onToggleEntry,
+  onDeleteEntry,
 }) {
   const groups = useMemo(() => groupByMonth(entries), [entries]);
   const searching = query.trim().length > 0;
@@ -157,6 +196,7 @@ export default function ArchivePanel({
             onToggle={() => onToggleMonth(group.key)}
             openEntryDate={openEntryDate}
             onToggleEntry={onToggleEntry}
+            onDeleteEntry={onDeleteEntry}
           />
         ))}
       </div>
