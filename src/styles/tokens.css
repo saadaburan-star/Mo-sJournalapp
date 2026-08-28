@@ -1,0 +1,107 @@
+/* Design tokens — the single source of truth for the visual system.
+   Every value here comes straight from the handoff README's token tables.
+   Nothing in the app hardcodes a colour, size, or duration; if a value is
+   not in this file it does not belong in the design. */
+
+:root {
+  /* ---- Colour ------------------------------------------------------ */
+  --paper-base: #F1EAD8;      /* page surface */
+  --paper-panel: #EBE2CC;     /* archive panel */
+  --row-expanded: #E9E3D6;    /* expanded archive row tint */
+  --ink: #1C1A16;             /* UI text, structural rules */
+  --ink-written: #2A2620;     /* the user's handwriting */
+  --ink-expanded: #3A362E;    /* expanded archive body */
+  --text-secondary: #6A6152;  /* excerpts */
+  --text-muted: #8C8578;      /* micro-labels */
+  --text-faint: #A9A192;      /* placeholders, footer note */
+  --text-chip: #6E6759;       /* tag chip label */
+  --accent: #253245;          /* primary action, save confirmation, fold marker */
+  --accent-on: #F4F0E8;       /* text on accent */
+  --error: #8C4A32;           /* the only other non-neutral */
+
+  --rule-hairline: #E0D9C8;   /* internal divisions */
+  --rule-input: #C9C1AF;      /* input underlines */
+  --rule-panel: #D6CAB0;      /* panel edge */
+  --rule-row: #DDD5C3;        /* archive entry row */
+  --dot-optional: #C4B99F;    /* the 3 optional pin dots */
+
+  /* ---- Type -------------------------------------------------------- */
+  /* Two families, strictly divided by role. UI is never handwritten;
+     written content is never condensed sans. Never mix them. */
+  --font-ui: 'Archivo Narrow', 'Arial Narrow', system-ui, sans-serif;
+  --font-written: 'Patrick Hand', 'Segoe Print', cursive;
+
+  --size-display-date: 82px;
+  --size-lock-heading: 62px;
+  --size-writing: 29px;
+  --size-entry-expanded: 19px;
+  --size-excerpt: 17px;
+  --size-day-numeral: 15px;
+  --size-search: 14px;
+  --size-chip: 12px;
+  --size-month-header: 12px;
+  --size-button: 12px;
+  --size-label-11: 11px;
+  --size-label-10: 10px;
+
+  --lh-display-date: 0.92;
+  --lh-lock-heading: 1.02;
+  --lh-writing: 1.72;
+  --lh-entry-expanded: 1.62;
+  --lh-excerpt: 1.36;
+  --lh-meta: 1.9;
+
+  --track-display-date: 0.005em;
+  --track-writing: 0.008em;
+  --track-day-numeral: 0.04em;
+  --track-search: 0.05em;
+  --track-today: 0.06em;
+  --track-chip: 0.12em;
+  --track-month-header: 0.14em;
+  --track-count: 0.16em;
+  --track-button: 0.18em;
+  --track-meta: 0.18em;
+  --track-label: 0.2em;
+  --track-day-label: 0.22em;
+  --track-section: 0.22em;
+  --track-private: 0.24em;
+
+  /* ---- Spacing ----------------------------------------------------- */
+  /* 4 · 6 · 9 · 12 · 14 · 18 · 24 · 26 · 46 · 92 */
+  --space-4: 4px;
+  --space-6: 6px;
+  --space-9: 9px;
+  --space-12: 12px;
+  --space-14: 14px;
+  --space-18: 18px;
+  --space-24: 24px;
+  --space-26: 26px;
+  --space-46: 46px;
+  --space-92: 92px;
+
+  --panel-width: 328px;       /* archive panel */
+  --panel-width-narrow: 56px; /* below 1024px: month markers only */
+  --column-pad: var(--space-92);
+  --lock-column: 430px;
+  /* Long entries hold their measure: the prose column keeps a comfortable
+     reading width regardless of how wide the window gets. */
+  --measure: 24em;
+
+  /* ---- Radius & shadow --------------------------------------------- */
+  /* 0 everywhere. The prototype's 9px window dots do not ship. */
+  --radius: 0;
+  /* No drop shadows in the UI — only the two inset texture shadows. */
+  --shadow-page: inset 0 0 90px rgba(122, 96, 58, 0.13);
+  --shadow-panel: inset -12px 0 26px -22px rgba(90, 70, 40, 0.55);
+
+  /* ---- Motion ------------------------------------------------------ */
+  --ease-out: ease-out;
+  --ease-sheet: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-dot: 200ms;           /* pin dot fill, message colour */
+  --dur-background: 260ms;    /* expanded row tint */
+  --dur-fold: 340ms;          /* month + entry fold */
+  --dur-fade: 400ms;          /* "Saved" fade */
+  --dur-rise: 420ms;          /* metadata row first appearance */
+  --dur-sweep: 620ms;         /* save sweep — the one exception to the budget */
+  --saved-hold: 2600ms;       /* how long "Saved" holds before fading */
+}

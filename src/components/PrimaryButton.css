@@ -1,0 +1,37 @@
+/* The one accent-filled control. Accent appears at most once or twice per
+   screen: never decorative, never a gradient, never a glow. */
+
+.primary-button {
+  font-family: var(--font-ui);
+  font-size: var(--size-button);
+  font-weight: 600;
+  letter-spacing: var(--track-button);
+  text-transform: uppercase;
+  color: var(--accent-on);
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 9px 26px;
+  flex: none;
+  transition: background var(--dur-dot) var(--ease-out),
+    border-color var(--dur-dot) var(--ease-out);
+}
+
+.primary-button--lock {
+  padding: 10px 30px;
+}
+
+.primary-button:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.primary-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.primary-button:disabled:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+}

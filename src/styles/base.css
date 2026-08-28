@@ -1,0 +1,112 @@
+/* Base surface and global defaults.
+   The paper texture is built entirely in CSS — no image assets anywhere in
+   this app. The off-axis fiber angles (91deg, 2deg, 89deg) are deliberate:
+   perfectly axis-aligned lines read as a screen artifact, not as paper. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  /* Texture should be felt, not seen — every layer stays subtle enough that
+     text contrast never drops. */
+  background-color: var(--paper-base);
+  background-image:
+    radial-gradient(120% 85% at 18% 0%, rgba(255, 252, 243, 0.9), rgba(255, 252, 243, 0) 62%),
+    radial-gradient(110% 80% at 100% 100%, rgba(142, 116, 74, 0.16), rgba(142, 116, 74, 0) 58%),
+    repeating-linear-gradient(91deg, rgba(138, 113, 72, 0.05) 0 1px, rgba(0, 0, 0, 0) 1px 3px),
+    repeating-linear-gradient(2deg, rgba(138, 113, 72, 0.038) 0 1px, rgba(0, 0, 0, 0) 1px 4px);
+  background-attachment: fixed;
+  box-shadow: var(--shadow-page);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+  border-radius: var(--radius);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-faint);
+  opacity: 1;
+}
+
+/* Focus is typographic, never a glow: a visible 1px ink outline. Never
+   removed — this is an accessibility requirement, not a style choice. */
+:focus-visible {
+  outline: 1px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* The writing surface and the pin field carry a real caret, which is focus
+   enough; an outline around a full-bleed textarea would box the page. */
+.focus-caret-only:focus-visible {
+  outline: none;
+}
+
+/* Shared micro-label treatment — used for every uppercase condensed label. */
+.micro-label {
+  font-family: var(--font-ui);
+  font-size: var(--size-label-10);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Motion is restrained and fast by design; for anyone who asks for less,
+   it stops entirely. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,29 @@
+.tag-chip {
+  font-family: var(--font-ui);
+  font-size: var(--size-chip);
+  letter-spacing: var(--track-chip);
+  text-transform: uppercase;
+  padding: 5px 11px;
+  border: 1px solid var(--rule-input);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-chip);
+  transition: border-color var(--dur-dot) var(--ease-out),
+    background var(--dur-dot) var(--ease-out), color var(--dur-dot) var(--ease-out);
+}
+
+.tag-chip--active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-on);
+}
+
+button.tag-chip:hover {
+  border-color: var(--accent);
+}
+
+/* A filed record rather than a control — read mode and the archive show tags
+   that cannot be toggled. */
+.tag-chip--static {
+  cursor: default;
+}

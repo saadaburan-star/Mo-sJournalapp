@@ -1,0 +1,37 @@
+/* Storage unavailable — a plain sentence on the paper surface, never a modal.
+   There is nothing to write into yet, so this is the whole screen. */
+
+.storage-error {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-24);
+}
+
+.storage-error__column {
+  width: var(--lock-column);
+  max-width: 100%;
+}
+
+.storage-error__heading {
+  font-family: var(--font-written);
+  font-size: var(--size-lock-heading);
+  line-height: var(--lh-lock-heading);
+  color: var(--ink);
+  font-weight: 400;
+  margin: 10px 0 0;
+}
+
+.storage-error__rule {
+  border-top: 1px solid var(--ink);
+  margin-top: 20px;
+}
+
+.storage-error__body {
+  font-family: var(--font-written);
+  font-size: var(--size-entry-expanded);
+  line-height: var(--lh-entry-expanded);
+  color: var(--ink-written);
+  margin-top: var(--space-24);
+}

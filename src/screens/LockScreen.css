@@ -1,0 +1,137 @@
+/* Pin lock — one 430px column, centred on both axes over the paper surface. */
+
+.lock {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-24);
+}
+
+.lock__column {
+  width: var(--lock-column);
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.lock__private {
+  font-family: var(--font-ui);
+  font-size: var(--size-label-10);
+  letter-spacing: var(--track-private);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.lock__heading {
+  font-family: var(--font-written);
+  font-size: var(--size-lock-heading);
+  line-height: var(--lh-lock-heading);
+  color: var(--ink);
+  margin: 10px 0 0;
+  font-weight: 400;
+}
+
+.lock__rule {
+  border-top: 1px solid var(--ink);
+  margin-top: 20px;
+}
+
+.lock__field-labels {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: var(--space-26);
+}
+
+/* The dots do the display; a transparent input over them does the typing. */
+.lock__dots {
+  position: relative;
+  margin-top: var(--space-12);
+}
+
+.lock__dot-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 30px;
+}
+
+.lock__dot {
+  border-radius: 50%;
+  background: transparent;
+  transition: background var(--dur-dot) ease;
+}
+
+.lock__dot--required {
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--text-muted);
+}
+
+.lock__dot--optional {
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--dot-optional);
+}
+
+.lock__dot--filled {
+  background: var(--accent);
+}
+
+.lock__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  /* Transparent text with a real caret: the writer sees a caret move across
+     the dots, and types for real. */
+  color: transparent;
+  caret-color: var(--accent);
+  font-family: var(--font-ui);
+  font-size: 20px;
+  letter-spacing: 1.1em;
+  cursor: text;
+}
+
+.lock__input-rule {
+  border-top: 1px solid var(--rule-input);
+  margin-top: 8px;
+}
+
+.lock__message-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: var(--space-24);
+}
+
+/* Every state is carried by this one line — no shake, no modal, no red flash. */
+.lock__message {
+  font-family: var(--font-written);
+  font-size: var(--size-entry-expanded);
+  color: var(--text-muted);
+  transition: color var(--dur-dot) ease;
+}
+
+.lock__message--error {
+  color: var(--error);
+}
+
+.lock__message--ok {
+  color: var(--accent);
+}
+
+.lock__footnote {
+  font-family: var(--font-ui);
+  font-size: var(--size-label-10);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-top: 34px;
+}

@@ -1,0 +1,8 @@
+/* The Sheet: a recessed archive panel on the left, the writing page filling
+   the rest. Full-viewport flex row. */
+
+.diary {
+  height: 100%;
+  display: flex;
+  overflow: hidden;
+}

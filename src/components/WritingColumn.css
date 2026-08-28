@@ -1,0 +1,207 @@
+/* Today / Write — the default surface and the whole product. */
+
+.writing {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.writing__header {
+  flex: none;
+  padding: var(--space-46) var(--column-pad) 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-24);
+}
+
+.writing__day-of-week {
+  font-family: var(--font-ui);
+  font-size: var(--size-label-11);
+  letter-spacing: var(--track-day-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: var(--space-6);
+}
+
+/* The date is handwritten too — the date written at the top of a notebook
+   page. Kept perfectly level and generously spaced so it reads as considered
+   rather than casual. */
+.writing__date {
+  font-family: var(--font-written);
+  font-size: var(--size-display-date);
+  line-height: var(--lh-display-date);
+  letter-spacing: var(--track-display-date);
+  color: var(--ink);
+  font-weight: 400;
+  margin: 0;
+}
+
+.writing__meta {
+  text-align: right;
+  font-family: var(--font-ui);
+  font-size: var(--size-label-11);
+  letter-spacing: var(--track-meta);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  line-height: var(--lh-meta);
+  flex: none;
+}
+
+/* The only full-ink rule on the screen. */
+.writing__rule {
+  flex: none;
+  margin: var(--space-26) var(--column-pad) 0;
+  border-top: 1px solid var(--ink);
+}
+
+.writing__first-run {
+  flex: none;
+  padding: var(--space-14) var(--column-pad) 0;
+  font-family: var(--font-ui);
+  font-size: var(--size-day-numeral);
+  color: var(--text-muted);
+}
+
+.writing__surface-wrap {
+  flex: 1;
+  min-height: 0;
+  padding: 28px var(--column-pad) 0;
+}
+
+.writing__surface {
+  width: 100%;
+  max-width: var(--measure);
+  height: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  font-family: var(--font-written);
+  font-size: var(--size-writing);
+  line-height: var(--lh-writing);
+  letter-spacing: var(--track-writing);
+  color: var(--ink-written);
+  /* No visible scrollbar until it is needed. */
+  overflow-y: auto;
+}
+
+/* ---- Metadata row: does not exist until there is text to describe ---- */
+
+.writing__metadata {
+  flex: none;
+  padding: 0 var(--column-pad) var(--space-18);
+}
+
+.writing__metadata-inner {
+  border-top: 1px solid var(--rule-hairline);
+  padding-top: 16px;
+  display: flex;
+  gap: 44px;
+  align-items: flex-start;
+  animation: rise var(--dur-rise) var(--ease-out) both;
+}
+
+.writing__metadata-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-9);
+}
+
+.writing__tags {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.writing__tag-input {
+  border: none;
+  border-bottom: 1px solid var(--rule-input);
+  outline: none;
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: var(--size-search);
+  letter-spacing: var(--track-today);
+  padding-bottom: var(--space-4);
+  width: 190px;
+  color: var(--ink);
+}
+
+/* ---- Footer ---------------------------------------------------------- */
+
+.writing__notice {
+  flex: none;
+  padding: 0 var(--column-pad) var(--space-12);
+  font-family: var(--font-ui);
+  font-size: var(--size-label-11);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--error);
+}
+
+.writing__footer {
+  flex: none;
+  border-top: 1px solid var(--rule-hairline);
+  padding: var(--space-14) var(--column-pad);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-24);
+}
+
+.writing__footer-left,
+.writing__footer-right {
+  display: flex;
+  align-items: center;
+}
+
+.writing__footer-left {
+  gap: var(--space-12);
+  min-width: 0;
+}
+
+.writing__footer-right {
+  gap: var(--space-18);
+}
+
+.writing__word-count,
+.writing__status {
+  font-family: var(--font-ui);
+  font-size: var(--size-label-11);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.writing__status--error {
+  color: var(--error);
+}
+
+/* A 1px bar that sweeps out to 58px — the save confirmation, in full. */
+.writing__sweep {
+  height: 1px;
+  width: 0;
+  background: var(--accent);
+  transition: width var(--dur-sweep) var(--ease-sheet);
+}
+
+.writing__sweep--out {
+  width: 58px;
+}
+
+.writing__saved {
+  font-family: var(--font-ui);
+  font-size: var(--size-label-11);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0;
+  transition: opacity var(--dur-fade) ease;
+}
+
+.writing__saved--visible {
+  opacity: 1;
+}
