@@ -83,9 +83,14 @@
   --panel-width-narrow: 56px; /* below 1024px: month markers only */
   --column-pad: var(--space-92);
   --lock-column: 430px;
-  /* Long entries hold their measure: the prose column keeps a comfortable
-     reading width regardless of how wide the window gets. */
-  --measure: 24em;
+  /* Long entries hold a measure rather than running the full width of a wide
+     monitor, but the measure is generous: 1160px is about 107 characters at
+     the 29px writing size, which fills the page without lines becoming a trek
+     for the eye. Widen or narrow the whole writing column from this one value.
+     Stated in px, not em, because it is used both inside the writing surface
+     (29px) and on the column around it (16px), where an em would mean two
+     different widths. */
+  --measure: 1160px;
 
   /* ---- Radius & shadow --------------------------------------------- */
   /* 0 everywhere. The prototype's 9px window dots do not ship. */

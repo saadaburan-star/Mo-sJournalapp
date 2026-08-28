@@ -262,6 +262,18 @@ Blueprint's Assumptions section.
 | 10 | The pin is a scrypt hash in an environment variable, compared server-side | `netlify/functions/pin.mjs` |
 | 11 | Last write wins per entry by timestamp, with a backup of a longer local copy | `src/lib/sync.js` |
 
+The writing column is 1160px wide — about 107 characters at the 29px writing
+size — and it centres itself when the archive is folded, so a wide monitor gets
+balanced margins rather than the whole gap piled up on the right. Both come from
+`--measure` in `tokens.css`; change that one value to widen or narrow the page.
+It is stated in px rather than em because it is used both inside the writing
+surface (29px) and on the column around it (16px), where an em would silently
+mean two different widths.
+
+Scrollbars are styled to the paper palette — a hairline thumb over a transparent
+track, in both the writing surface and the archive. The operating system's
+default bar reads as a window dropped onto the page.
+
 The archive panel folds to zero width rather than to the 56px strip — the strip
 is still what narrow viewports get, but an explicit fold means the writer wanted
 the panel gone, not smaller. While folded it is `inert` and `aria-hidden`, so it

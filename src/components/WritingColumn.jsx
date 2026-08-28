@@ -68,7 +68,7 @@ export default function WritingColumn({
   const syncLine = SYNC_LINES[syncState];
 
   return (
-    <main className="writing">
+    <main className={`writing${archiveOpen ? '' : ' writing--full'}`}>
       <header className="writing__header">
         <div>
           <div className="writing__day-of-week">{formatDayOfWeek(date)}</div>
