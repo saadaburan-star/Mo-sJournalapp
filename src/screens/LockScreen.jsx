@@ -1,14 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import PrimaryButton from '../components/PrimaryButton.jsx';
-import {
-  PIN_MAX,
-  PIN_MIN,
-  isValidPinShape,
-  lockoutRemaining,
-  setPin as storePin,
-  verifyPin,
-} from '../lib/pinGate.js';
+import { PIN_MAX, PIN_MIN, isValidPinShape, verifyPin } from '../lib/pinGate.js';
 import './LockScreen.css';
 
 /* 8 required digits, then 3 optional ones — the dot row shows the shape of a
@@ -19,17 +12,20 @@ const TOTAL_DOTS = PIN_MAX;
 /** Every state of the screen is one line of copy and one colour. */
 const MESSAGES = {
   idle: { text: 'Enter your pin to open the diary.', tone: 'muted' },
-  idleFirstRun: { text: 'Choose a pin to lock the diary.', tone: 'muted' },
   short: { text: `A pin is ${PIN_MIN} to ${PIN_MAX} numbers.`, tone: 'error' },
   wrong: { text: "That pin doesn't match.", tone: 'error' },
   ok: { text: 'Unlocked.', tone: 'ok' },
   lockedOut: { text: 'Too many tries. Wait a minute.', tone: 'error' },
   checking: { text: 'Checking.', tone: 'muted' },
+  // The check happens on the server, so it can be out of reach. Saying so
+  // plainly beats a spinner or a silent failure.
+  unreachable: { text: "Can't reach the lock. Check your connection.", tone: 'error' },
+  unconfigured: { text: 'The lock is not set up yet.', tone: 'error' },
 };
 
-export default function LockScreen({ firstRun, onUnlocked }) {
+export default function LockScreen({ onUnlocked }) {
   const [pin, setPinValue] = useState('');
-  const [state, setState] = useState(firstRun ? 'idleFirstRun' : 'idle');
+  const [state, setState] = useState('idle');
   const [busy, setBusy] = useState(false);
   const inputRef = useRef(null);
 
@@ -38,25 +34,11 @@ export default function LockScreen({ firstRun, onUnlocked }) {
     inputRef.current?.focus();
   }, []);
 
-  // A lockout that was still running when the tab was closed is still running
-  // now; say so rather than letting the writer type into a dead field.
-  useEffect(() => {
-    let cancelled = false;
-    lockoutRemaining().then((remaining) => {
-      if (!cancelled && remaining > 0) setState('lockedOut');
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   function handleChange(event) {
     // Strip non-digits and cap at 11 on every keystroke.
     const digits = event.target.value.replace(/\D/g, '').slice(0, PIN_MAX);
     setPinValue(digits);
-    if (state !== 'lockedOut' && state !== 'ok') {
-      setState(firstRun ? 'idleFirstRun' : 'idle');
-    }
+    if (state !== 'lockedOut' && state !== 'ok') setState('idle');
   }
 
   async function submit() {
@@ -70,9 +52,9 @@ export default function LockScreen({ firstRun, onUnlocked }) {
     setBusy(true);
     setState('checking');
 
-    // The gate is async and constant-delayed by design — the same shape the
-    // Netlify Function will have, so nothing here changes when it lands.
-    const result = firstRun ? await storePin(pin) : await verifyPin(pin);
+    // The pin goes to the function and a token comes back. Nothing is
+    // compared in this browser.
+    const result = await verifyPin(pin);
     setBusy(false);
 
     if (result.ok) {
@@ -166,7 +148,7 @@ export default function LockScreen({ firstRun, onUnlocked }) {
             onClick={submit}
             disabled={busy || state === 'lockedOut'}
           >
-            {firstRun ? 'Set pin' : 'Unlock'}
+            Unlock
           </PrimaryButton>
         </div>
 

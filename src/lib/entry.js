@@ -51,6 +51,10 @@ export function normaliseEntry(raw) {
     tags: Array.isArray(raw.tags) ? raw.tags.filter((tag) => typeof tag === 'string') : [],
     createdAt: raw.createdAt || new Date().toISOString(),
     updatedAt: raw.updatedAt || raw.createdAt || new Date().toISOString(),
+    // Scaffolding, not the writer's work. Seeded entries stay on the device
+    // that generated them — see sync.js. The flag is dropped the moment the
+    // writer saves the entry themselves.
+    ...(raw.seeded ? { seeded: true } : {}),
   };
 }
 

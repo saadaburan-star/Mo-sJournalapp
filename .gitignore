@@ -4,3 +4,6 @@ dist
 .env
 .env.*
 .netlify
+
+# local test harness, not part of the app
+.local-stack.mjs

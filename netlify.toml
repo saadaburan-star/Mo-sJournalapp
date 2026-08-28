@@ -1,12 +1,17 @@
 [build]
   command = "npm run build"
   publish = "dist"
+  functions = "netlify/functions"
 
 [build.environment]
   NODE_VERSION = "22"
 
-# Single-page app: every path serves the shell. There are no other routes in
-# Phase 1, but this keeps a refresh on any URL from 404ing.
+# The functions declare their own routes (/api/pin, /api/sync) via the `config`
+# export, so there are no function redirects here. This one catch-all is for
+# the single-page app: every other path serves the shell.
+#
+# It sits below the functions' own routes in Netlify's precedence order, so it
+# never shadows /api/*.
 [[redirects]]
   from = "/*"
   to = "/index.html"

@@ -6,10 +6,13 @@
    only to the narrow interface in src/storage/index.js. */
 
 const DB_NAME = 'traders-diary';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 export const STORE_ENTRIES = 'entries';
 export const STORE_PREFS = 'prefs';
+/* Local copies kept when a remote version replaces a longer local one. The
+   conflict rule is last-write-wins, but it must never silently lose writing. */
+export const STORE_BACKUPS = 'backups';
 
 /** Storage failed in a way the UI needs to describe to the writer. */
 export class StorageError extends Error {
@@ -66,6 +69,9 @@ export function openDatabase() {
       }
       if (!db.objectStoreNames.contains(STORE_PREFS)) {
         db.createObjectStore(STORE_PREFS, { keyPath: 'key' });
+      }
+      if (!db.objectStoreNames.contains(STORE_BACKUPS)) {
+        db.createObjectStore(STORE_BACKUPS, { keyPath: 'id', autoIncrement: true });
       }
     };
 

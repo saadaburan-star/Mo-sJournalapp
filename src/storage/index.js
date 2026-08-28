@@ -7,13 +7,20 @@
    alongside this one, reading and writing through the same shapes.
 
    Interface: init · getEntry · putEntry · listEntries · deleteEntry ·
-              searchEntries · getPref · setPref
+              searchEntries · getPref · setPref · putBackup · listBackups
 
    ASSUMPTION (Blueprint #1): local persistence uses IndexedDB rather than
    localStorage, because inline images in a later phase will blow past the
    localStorage quota. */
 
-import { openDatabase, withStore, StorageError, STORE_ENTRIES, STORE_PREFS } from './db.js';
+import {
+  openDatabase,
+  withStore,
+  StorageError,
+  STORE_ENTRIES,
+  STORE_PREFS,
+  STORE_BACKUPS,
+} from './db.js';
 import { normaliseEntry } from '../lib/entry.js';
 
 export { StorageError };
@@ -67,6 +74,23 @@ export function filterEntries(entries, query) {
     if (inTags) return true;
     return entry.blocks.some((block) => block.text.toLowerCase().includes(needle));
   });
+}
+
+/**
+ * Keep a copy of a local entry that a remote version is about to replace.
+ *
+ * Last write wins by timestamp, but the Blueprint is explicit that a longer
+ * local entry must never be discarded for a shorter remote one without a
+ * backup. This is where that copy goes; nothing overwrites it afterwards.
+ */
+export async function putBackup(entry, reason) {
+  await withStore(STORE_BACKUPS, 'readwrite', (store) =>
+    store.add({ date: entry.date, reason, savedAt: new Date().toISOString(), entry }),
+  );
+}
+
+export async function listBackups() {
+  return (await withStore(STORE_BACKUPS, 'readonly', (store) => store.getAll())) || [];
 }
 
 export async function getPref(key, fallback = null) {

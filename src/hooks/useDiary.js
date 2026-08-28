@@ -1,9 +1,23 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { StorageError, filterEntries, putEntry } from '../storage/index.js';
+import { StorageError, filterEntries, listEntries, putEntry } from '../storage/index.js';
 import { loadDiary, openToday } from '../lib/diary.js';
-import { applyText, collectTags, entryText, normaliseTag } from '../lib/entry.js';
+import {
+  applyText,
+  beginSitting,
+  collectTags,
+  entryText,
+  hasWriting,
+  normaliseTag,
+} from '../lib/entry.js';
 import { monthKey, todayISO } from '../lib/date.js';
+import {
+  getSyncState,
+  onEntriesChanged,
+  onSyncState,
+  requestSync,
+  startSync,
+} from '../lib/sync.js';
 
 /** Quiet debounced autosave, so nothing is ever lost mid-thought. */
 const AUTOSAVE_MS = 1500;
@@ -38,7 +52,7 @@ export default function useDiary() {
   const [closedMonths, setClosedMonths] = useState(() => new Set());
   const [searchClosedMonths, setSearchClosedMonths] = useState(() => new Set());
   const [openEntryDate, setOpenEntryDate] = useState('');
-  const [offline, setOffline] = useState(() => !navigator.onLine);
+  const [syncState, setSyncState] = useState(getSyncState);
 
   const autosaveTimer = useRef(null);
   const savedTimer = useRef(null);
@@ -90,18 +104,51 @@ export default function useDiary() {
     };
   }, []);
 
-  /* ---- Offline ------------------------------------------------------- */
+  /* ---- Sync ---------------------------------------------------------- */
+
+  // Background only. The UI subscribes to what sync reports and never waits
+  // on it; local reads and writes carry on regardless of the network.
+  useEffect(() => onSyncState(setSyncState), []);
 
   useEffect(() => {
-    const goOnline = () => setOffline(false);
-    const goOffline = () => setOffline(true);
-    window.addEventListener('online', goOnline);
-    window.addEventListener('offline', goOffline);
-    return () => {
-      window.removeEventListener('online', goOnline);
-      window.removeEventListener('offline', goOffline);
-    };
-  }, []);
+    if (!ready) return undefined;
+    return startSync();
+  }, [ready]);
+
+  // A pull that changed something locally: fold the new entries into the list,
+  // and adopt a newer version of today only when doing so cannot interrupt
+  // anyone. Typing is never interrupted — that rule outranks freshness.
+  useEffect(
+    () =>
+      onEntriesChanged(async () => {
+        const refreshed = await listEntries();
+        setEntries(refreshed);
+
+        const { entry: current, text: onScreen } = pending.current;
+        if (!current) return;
+
+        const incoming = refreshed.find((entry) => entry.date === current.date);
+        if (!incoming) return;
+
+        // Unsaved edits on screen: leave the surface alone. The next save
+        // pushes them, and last-write-wins settles it by timestamp.
+        if (onScreen !== entryText(current)) return;
+
+        // Adopt when this device has nothing written for today yet, or when
+        // the pulled version is genuinely newer than what is on screen.
+        const isNewer = Date.parse(incoming.updatedAt) > Date.parse(current.updatedAt);
+        if (hasWriting(current) && !isNewer) return;
+        if (!hasWriting(incoming)) return;
+
+        const opened = beginSitting(incoming);
+        setToday(opened.entry);
+        setSittingBlockId(opened.sittingBlockId);
+        setText(entryText(opened.entry));
+        setTags(opened.entry.tags);
+        setFirstRun(false);
+      }),
+    [],
+  );
 
   /* ---- Writing ------------------------------------------------------- */
 
@@ -115,7 +162,10 @@ export default function useDiary() {
     const { entry, text: draft, tags: draftTags, sittingBlockId: blockId } = pending.current;
     if (!entry) return null;
 
-    const applied = applyText({ ...entry, tags: draftTags }, draft, blockId);
+    // Saving makes the entry the writer's own: a seeded sample they wrote into
+    // stops being scaffolding and starts syncing like anything else.
+    const { seeded, ...ownEntry } = entry;
+    const applied = applyText({ ...ownEntry, tags: draftTags }, draft, blockId);
 
     try {
       const saved = await putEntry(applied.entry);
@@ -127,6 +177,8 @@ export default function useDiary() {
       });
       setStorageNotice('');
       setFirstRun(false);
+      // Tell sync there is something new. Debounced, backgrounded, not awaited.
+      requestSync();
       return saved;
     } catch (error) {
       // Never lose in-session work: the text stays on screen and the writer is
@@ -275,7 +327,7 @@ export default function useDiary() {
     saveState,
     save,
     storageNotice,
-    offline,
+    syncState,
     firstRun,
     // archive
     visibleEntries,

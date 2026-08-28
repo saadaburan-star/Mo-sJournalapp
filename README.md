@@ -8,10 +8,11 @@ Built with React + Vite, deployed to Netlify.
 
 ---
 
-## Phase 1 — what is in this build
+## What is in this build
 
-- **Pin lock** — 8 to 11 digits, with all of its states: idle, too short, wrong,
-  unlocked, and locked out after five failures.
+- **Pin lock** — 8 to 11 digits, **verified server-side** by a Netlify Function,
+  with all of its states: idle, too short, wrong, unlocked, locked out, and
+  unreachable.
 - **Today / Write** — the primary screen. Opens with the cursor already in the
   writing area, at the end of what is already there. Live word count, a deferred
   metadata row for tags, an explicit save with the sweep confirmation, and a
@@ -20,13 +21,15 @@ Built with React + Vite, deployed to Netlify.
   past days grouped under collapsible month headers, any entry expanding in
   place, and live search across entry text and tags.
 - **Local persistence** in IndexedDB, behind an isolated storage module.
+- **Background sync** to Netlify Blobs through a second Function, so the same
+  diary appears on any device behind the same pin. Local-first: the UI never
+  calls the network and never waits on it.
 - **Six seeded past entries**, so the archive and search are real on first open.
 
 ### Not in this build
 
-Sync, the Netlify Functions, and Netlify Blobs. Rich text formatting, inline
-images, full-width read mode, and entry deletion. All are deliberate deferrals,
-not oversights — see *Deferred* below.
+Rich text formatting, inline images, full-width read mode, and entry deletion.
+Deliberate deferrals — see *Deferred* below.
 
 ---
 
@@ -34,53 +37,100 @@ not oversights — see *Deferred* below.
 
 ```sh
 npm install
-npm run dev        # http://localhost:5173
+npx netlify dev    # http://localhost:8888 — Vite AND the functions
 npm run build      # production build into dist/
-npm run preview    # serve the production build
 ```
+
+Use `npx netlify dev`, not `npm run dev`. The lock is verified by a Function, so
+plain Vite leaves `/api/pin` unrouted and the lock screen will correctly report
+that it cannot be reached. Create a `.env` first (it is gitignored):
+
+```sh
+npm run hash-pin   # prompts for a pin, prints both variables
+```
+
+Paste its two lines into `.env` for local work, and into Netlify's environment
+variables for the deployed site.
+
+---
 
 ## Deploying to Netlify
 
-`netlify.toml` is committed and already correct — build `npm run build`, publish
-`dist`, with an SPA redirect. Either connect the repository in the Netlify UI and
-accept the detected settings, or:
+**1. Choose the pin and generate the secrets.**
+
+```sh
+npm run hash-pin
+```
+
+It prompts for an 8–11 digit pin and prints two values:
+
+| Variable | What it is |
+|---|---|
+| `DIARY_PIN_HASH` | scrypt hash of your pin, salted. The pin itself is never stored. |
+| `DIARY_TOKEN_SECRET` | random 32 bytes used to sign unlock tokens. |
+
+**2. Put them in Netlify**, under Site configuration → Environment variables.
+Never commit them; `.env` is gitignored for exactly this reason.
+
+**3. Deploy.** `netlify.toml` is committed and already correct — build
+`npm run build`, publish `dist`, functions in `netlify/functions`. Either connect
+the repository in the Netlify UI and accept the detected settings, or:
 
 ```sh
 npx netlify-cli deploy --build --prod
 ```
 
-No environment variables are needed yet. The one that will be needed when sync
-lands is described below.
+Netlify Blobs needs no setup — the store is created on first write, on the free
+tier, under the same site.
+
+**To change the pin later**, run `npm run hash-pin` again and replace
+`DIARY_PIN_HASH`. Existing devices stay unlocked, because they hold tokens rather
+than the pin. To force every device to re-enter the pin, replace
+`DIARY_TOKEN_SECRET` too — that invalidates every token immediately.
 
 ---
 
-## ⚠️ The pin is not security yet
+## How the lock works
 
-**Read this before putting the app on a public URL.**
+The pin is compared **only** in `netlify/functions/pin.mjs`, never in the
+browser. There is no local fallback, deliberately: a fallback would quietly
+reintroduce the exact weakness the check exists to remove.
 
-The design handoff is emphatic, and correct: *a pin compared in front-end
-JavaScript is no lock at all.* The real check belongs in a Netlify Function that
-holds a bcrypt or scrypt hash in an environment variable, rate-limits failures
-per IP, adds a constant delay, and returns a short-lived **signed** token.
+- The client posts the pin once and receives a short-lived **signed** token
+  (HMAC-SHA256, 30 days). The pin is discarded; the token is what the browser
+  keeps, and it is what `/api/sync` requires on every call.
+- The pin is stored as a salted **scrypt** hash in `DIARY_PIN_HASH` — never in
+  the bundle, never in the repo, never in plain text.
+- Failures are **rate-limited per IP**: five wrong attempts locks that address
+  out for a minute. Buckets are keyed by a hash of the IP, not the IP.
+- Every response takes a **constant ~250ms**, whatever the outcome, so timing
+  leaks nothing.
+- **No route returns entry content without a valid token**, and the diary
+  screen is not mounted until one exists.
 
-Sync is deferred, so that function does not exist yet. What ships here is the
-same interface — `src/lib/pinGate.js` — backed locally, so that every state of
-the lock screen is real and exercisable now, and so that swapping in the function
-later means replacing two calls with `fetch()` and changing nothing else.
+An 8–11 digit pin is still a thin gate — it is a private lock, not an
+authentication system. Anyone with both the pin and the URL can read the diary.
+Do not add analytics, error reporting, or any third-party script to this app.
 
-Until then this gate stops someone glancing at your screen. It does not stop
-anyone willing to open devtools. **Do not deploy this to a public URL expecting
-the diary to be private.** Keep it local, or wait for the sync phase.
-
-When that phase lands: the pin hash goes in a Netlify environment variable, read
-only by the function. Never hardcoded, never in the front-end bundle, never
-committed.
+If a token expires or the secret is rotated mid-session, sync reports a failure
+and drops the token; the next load asks for the pin. It deliberately does **not**
+yank the screen away from someone mid-sentence — their writing is already safe
+locally.
 
 ---
 
 ## Architecture
 
 ```
+netlify/
+  functions/
+    pin.mjs        the lock — scrypt compare, rate limit, signed token
+    sync.mjs       the store — manifest, push, pull, all token-gated
+  lib/
+    pin.mjs        scrypt hashing and constant-time comparison
+    token.mjs      HMAC token signing and verification
+scripts/
+  hash-pin.mjs     `npm run hash-pin`
 src/
   storage/         the ONLY code that touches persistence
     db.js          minimal promise wrapper over IndexedDB
@@ -89,7 +139,8 @@ src/
     entry.js       the entry model — days, blocks, tags, word count
     date.js        local-time date helpers
     diary.js       composes storage + model + seed
-    pinGate.js     the gate (see the warning above)
+    pinGate.js     posts the pin to the function, keeps the token
+    sync.js        background push/pull/merge — never awaited by the UI
   hooks/
     useDiary.js    all of Today/Write and the archive's state
   components/      ArchivePanel, WritingColumn, TagChip, PrimaryButton
@@ -99,10 +150,29 @@ src/
 ```
 
 **The storage boundary is the point of the whole build.** Nothing outside
-`src/storage/` touches IndexedDB. The backing store can later become an encrypted
-store, a different host, or a desktop filesystem without a single screen
-changing. A sync module will sit alongside it, reading and writing the same
-shapes, in the background — the UI will never call the network or await it.
+`src/storage/` touches IndexedDB. `src/lib/sync.js` sits alongside it, reading
+and writing the same shapes in the background. The UI calls neither the network
+nor `fetch` directly, and never awaits a sync: it subscribes to what sync
+reports and carries on.
+
+**Sync is two requests per cycle, regardless of diary size.** A `GET` returns a
+manifest of `{ date: updatedAt }`; the client diffs it against local and sends
+one `POST` carrying only the entries that actually differ, in both directions.
+The manifest exists because Netlify Blobs' `list()` returns keys without
+metadata — without it, a pull would mean downloading every entry just to compare
+timestamps. It is derived data, and the function rebuilds it from the entries if
+it is ever missing.
+
+**Conflicts are last-write-wins per entry, by `updatedAt`** — there is exactly
+one writer, so that is the whole rule. The one guard: if a remote version
+replaces a local one that is *longer*, the local copy is written to a `backups`
+store first. Last-write-wins should never mean silently losing writing.
+
+**Seeded entries never sync.** They are marked `seeded` and stay on the device
+that generated them — otherwise two devices first opened on different days would
+each contribute their own set of samples to the shared store. Saving an entry
+strips the flag, so anything the writer actually touches becomes theirs and
+syncs normally.
 
 **Entry content is structured data, not HTML strings.** A day holds blocks; a
 block holds text and the timestamp of the sitting that produced it. That is what
@@ -158,6 +228,9 @@ Blueprint's Assumptions section.
 | 5 | Freeform tags, autocompleted from tags already used | `src/components/WritingColumn.jsx` |
 | 7 | Local timezone; the day rolls at local midnight | `src/lib/date.js` |
 | 8 | Designed for 1280px and up; below 1024px the panel becomes a 56px strip | `src/components/ArchivePanel.css` |
+| 9 | Sync is Netlify Functions + Netlify Blobs — no third-party database | `netlify/functions/sync.mjs` |
+| 10 | The pin is a scrypt hash in an environment variable, compared server-side | `netlify/functions/pin.mjs` |
+| 11 | Last write wins per entry by timestamp, with a backup of a longer local copy | `src/lib/sync.js` |
 
 One consequence of assumption 2 is worth knowing: if you edit text from an
 earlier sitting, that entry's block boundaries no longer describe the text, so
@@ -171,9 +244,10 @@ first day you write is entry 7.
 
 ## Deferred
 
-Sync (Netlify Functions + Netlify Blobs, last-write-wins per entry by
-last-edited timestamp), the real server-side pin check, rich text, inline images,
-full read mode, delete, and export.
+Rich text, inline images, full read mode, delete, and export. End-to-end
+encryption of synced entries, so the host never sees plaintext, is the most
+valuable next step: today Netlify Blobs holds the diary in plain JSON, readable
+by anyone with access to the Netlify account.
 
 Permanently out of scope: trade imports, P&L, tickers, charts, win rates,
 streaks, reminders, mood analytics, accounts, and anything else that would turn

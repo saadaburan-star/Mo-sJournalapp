@@ -9,6 +9,11 @@
  * Dates are offsets from today, so the seeded archive always spans the current
  * month plus older ones no matter when the app is first opened. That is what
  * makes the fold states meaningful: current month open, older months shut.
+ *
+ * They are marked `seeded` and are never pushed to the synced store — they are
+ * a per-device scaffold, not the writer's diary. Without that, two devices
+ * first opened on different days would each contribute their own set of
+ * samples to the shared store.
  */
 
 import { createBlock, createEntry } from '../lib/entry.js';
@@ -158,6 +163,7 @@ export function buildSeedEntries() {
       createBlock(sitting.text, at(date, sitting.hour, sitting.minute)),
     );
     entry.tags = draft.tags;
+    entry.seeded = true;
     entry.createdAt = entry.blocks[0].startedAt;
     entry.updatedAt = entry.blocks[entry.blocks.length - 1].startedAt;
 

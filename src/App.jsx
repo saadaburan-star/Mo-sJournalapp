@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import Diary from './screens/Diary.jsx';
 import LockScreen from './screens/LockScreen.jsx';
 import { init } from './storage/index.js';
-import { isPinSet, readToken } from './lib/pinGate.js';
+import { readToken } from './lib/pinGate.js';
 import './App.css';
 
 /**
@@ -14,7 +14,7 @@ import './App.css';
  * entries.
  */
 export default function App() {
-  // 'checking' → 'first-run' | 'locked' | 'unlocked' | 'no-storage'
+  // 'checking' → 'locked' | 'unlocked' | 'no-storage'
   const [phase, setPhase] = useState('checking');
 
   useEffect(() => {
@@ -23,15 +23,10 @@ export default function App() {
     (async () => {
       try {
         await init();
-        // Whether a pin exists is a preference, not diary content — safe to
-        // read before unlocking.
-        const pinExists = await isPinSet();
         if (cancelled) return;
-
-        if (!pinExists) {
-          setPhase('first-run');
-          return;
-        }
+        // A token that is present and unexpired is what "this device stays
+        // unlocked" means. Its signature is checked by the function on the
+        // first sync call, not here.
         setPhase(readToken() ? 'unlocked' : 'locked');
       } catch {
         if (!cancelled) setPhase('no-storage');
@@ -62,13 +57,8 @@ export default function App() {
     );
   }
 
-  if (phase === 'first-run' || phase === 'locked') {
-    return (
-      <LockScreen
-        firstRun={phase === 'first-run'}
-        onUnlocked={() => setPhase('unlocked')}
-      />
-    );
+  if (phase === 'locked') {
+    return <LockScreen onUnlocked={() => setPhase('unlocked')} />;
   }
 
   return <Diary />;

@@ -34,7 +34,7 @@ export default function Diary() {
         knownTags={diary.knownTags}
         saveState={diary.saveState}
         onSave={diary.save}
-        offline={diary.offline}
+        syncState={diary.syncState}
         storageNotice={diary.storageNotice}
         firstRun={diary.firstRun}
       />

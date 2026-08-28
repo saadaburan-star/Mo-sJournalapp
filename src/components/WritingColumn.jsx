@@ -6,6 +6,14 @@ import { formatDayOfWeek, formatDisplayDate } from '../lib/date.js';
 import { countWords, normaliseTag, wordLabel } from '../lib/entry.js';
 import './WritingColumn.css';
 
+/* One small line of type, never a spinner over the writing area. */
+const SYNC_LINES = {
+  synced: { text: 'Synced.', tone: 'muted' },
+  syncing: { text: 'Syncing.', tone: 'muted' },
+  offline: { text: 'Offline — saved on this device.', tone: 'muted' },
+  failed: { text: 'Sync failed — retrying.', tone: 'error' },
+};
+
 export default function WritingColumn({
   date,
   entryNumber,
@@ -17,7 +25,7 @@ export default function WritingColumn({
   knownTags,
   saveState,
   onSave,
-  offline,
+  syncState,
   storageNotice,
   firstRun,
 }) {
@@ -55,6 +63,7 @@ export default function WritingColumn({
 
   const hasText = text.trim().length > 0;
   const words = countWords(text);
+  const syncLine = SYNC_LINES[syncState];
 
   return (
     <main className="writing">
@@ -146,8 +155,14 @@ export default function WritingColumn({
           />
         </div>
         <div className="writing__footer-right">
-          {offline && (
-            <div className="writing__status">Offline — saved on this device.</div>
+          {syncLine && (
+            <div
+              className={`writing__status${
+                syncLine.tone === 'error' ? ' writing__status--error' : ''
+              }`}
+            >
+              {syncLine.text}
+            </div>
           )}
           <div
             className={`writing__saved${saveState === 'saved' ? ' writing__saved--visible' : ''}`}
