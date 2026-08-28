@@ -26,7 +26,12 @@ Built with React + Vite, deployed to Netlify.
   calls the network and never waits on it.
 - **Delete a past day**, behind a confirmation in the row itself, with the
   deletion syncing to your other devices.
-- **Six seeded past entries**, so the archive and search are real on first open.
+- **Fold the archive away entirely**, so the writing page has the window to
+  itself. The `Archive –` / `Archive +` control sits in the footer, and the
+  choice is remembered across reloads.
+- **Six seeded past entries**, so the archive and search are real on first
+  open — with a one-time line offering to remove them all. It appears only
+  while samples remain, so it cannot be shown twice.
 
 ### Not in this build
 
@@ -170,6 +175,11 @@ one writer, so that is the whole rule. The one guard: if a remote version
 replaces a local one that is *longer*, the local copy is written to a `backups`
 store first. Last-write-wins should never mean silently losing writing.
 
+**The samples are removable in one action, once.** The offer to clear them is
+rendered only while `sampleCount > 0`, so it disappears with them and never
+returns — there is no dismissed-state flag to keep, because the condition is
+the diary's own contents.
+
 **Seeded entries never sync.** They are marked `seeded` and stay on the device
 that generated them — otherwise two devices first opened on different days would
 each contribute their own set of samples to the shared store. Saving an entry
@@ -243,6 +253,11 @@ Blueprint's Assumptions section.
 | 9 | Sync is Netlify Functions + Netlify Blobs — no third-party database | `netlify/functions/sync.mjs` |
 | 10 | The pin is a scrypt hash in an environment variable, compared server-side | `netlify/functions/pin.mjs` |
 | 11 | Last write wins per entry by timestamp, with a backup of a longer local copy | `src/lib/sync.js` |
+
+The archive panel folds to zero width rather than to the 56px strip — the strip
+is still what narrow viewports get, but an explicit fold means the writer wanted
+the panel gone, not smaller. While folded it is `inert` and `aria-hidden`, so it
+is out of the keyboard order too.
 
 One consequence of assumption 2 is worth knowing: if you edit text from an
 earlier sitting, that entry's block boundaries no longer describe the text, so

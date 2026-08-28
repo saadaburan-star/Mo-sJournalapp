@@ -5,8 +5,10 @@ import {
   deleteEntry as removeRecord,
   filterEntries,
   getEntry,
+  getPref,
   listEntries,
   putEntry,
+  setPref,
 } from '../storage/index.js';
 import { loadDiary, openToday } from '../lib/diary.js';
 import {
@@ -31,6 +33,9 @@ import {
 const AUTOSAVE_MS = 1500;
 /** How long "Saved" holds before it fades. */
 const SAVED_HOLD_MS = 2600;
+
+/** Whether the archive panel is showing. */
+const ARCHIVE_OPEN_KEY = 'archive-open';
 
 const STORAGE_MESSAGES = {
   quota: 'Storage is full. This sitting is safe on screen, but new writing is not being saved.',
@@ -60,6 +65,10 @@ export default function useDiary() {
   const [closedMonths, setClosedMonths] = useState(() => new Set());
   const [searchClosedMonths, setSearchClosedMonths] = useState(() => new Set());
   const [openEntryDate, setOpenEntryDate] = useState('');
+  // The whole archive panel folds away so the writing page can have the
+  // window to itself. Remembered across reloads, not just for the session:
+  // someone who writes with it shut wants it shut tomorrow too.
+  const [archiveOpen, setArchiveOpen] = useState(true);
   const [syncState, setSyncState] = useState(getSyncState);
 
   const autosaveTimer = useRef(null);
@@ -88,6 +97,8 @@ export default function useDiary() {
         setTags(opened.entry.tags);
         // Nothing written yet, anywhere: this is a genuine first run.
         setFirstRun(stored.length === 0);
+
+        setArchiveOpen((await getPref(ARCHIVE_OPEN_KEY, true)) !== false);
 
         // Older months sit collapsed; the current month is unfolded.
         const current = monthKey(opened.entry.date);
@@ -344,6 +355,40 @@ export default function useDiary() {
     }
   }, []);
 
+  const toggleArchive = useCallback(() => {
+    setArchiveOpen((current) => {
+      const next = !current;
+      setPref(ARCHIVE_OPEN_KEY, next).catch(() => {
+        // A preference that will not persist is not worth interrupting anyone
+        // over; the panel still folds for this session.
+      });
+      return next;
+    });
+  }, []);
+
+  /**
+   * Clear the seeded samples in one go.
+   *
+   * They are scaffolding, and once they are gone the offer to remove them goes
+   * with them — the line that triggers this only exists while samples remain,
+   * so it can never be shown twice. No tombstones: samples never reached the
+   * shared store, so there is nothing to tell the other devices.
+   */
+  const removeSamples = useCallback(async () => {
+    try {
+      const all = await listEntries();
+      for (const entry of all) {
+        if (entry.seeded) await removeRecord(entry.date);
+      }
+      setEntries(await listEntries());
+      setOpenEntryDate('');
+      setStorageNotice('');
+    } catch (error) {
+      const kind = error instanceof StorageError ? error.kind : 'unknown';
+      setStorageNotice(STORAGE_MESSAGES[kind] || STORAGE_MESSAGES.unknown);
+    }
+  }, []);
+
   /** Only one entry is expanded at a time; opening another closes the first. */
   const toggleEntry = useCallback((entryDate) => {
     setOpenEntryDate((current) => (current === entryDate ? '' : entryDate));
@@ -375,5 +420,9 @@ export default function useDiary() {
     openEntryDate,
     toggleEntry,
     deleteEntry,
+    archiveOpen,
+    toggleArchive,
+    sampleCount: entries.filter((entry) => entry.seeded).length,
+    removeSamples,
   };
 }

@@ -22,6 +22,9 @@ export default function Diary() {
         openEntryDate={diary.openEntryDate}
         onToggleEntry={diary.toggleEntry}
         onDeleteEntry={diary.deleteEntry}
+        open={diary.archiveOpen}
+        sampleCount={diary.sampleCount}
+        onRemoveSamples={diary.removeSamples}
       />
 
       <WritingColumn
@@ -38,6 +41,8 @@ export default function Diary() {
         syncState={diary.syncState}
         storageNotice={diary.storageNotice}
         firstRun={diary.firstRun}
+        archiveOpen={diary.archiveOpen}
+        onToggleArchive={diary.toggleArchive}
       />
     </div>
   );

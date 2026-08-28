@@ -166,6 +166,32 @@
   gap: var(--space-18);
 }
 
+.writing__archive-toggle {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-6);
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-family: var(--font-ui);
+  font-size: var(--size-label-11);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+  transition: color var(--dur-dot) var(--ease-out);
+}
+
+.writing__archive-toggle:hover {
+  color: var(--ink);
+}
+
+.writing__archive-marker {
+  color: var(--accent);
+  width: 9px;
+  text-align: center;
+}
+
 .writing__word-count,
 .writing__status {
   font-family: var(--font-ui);

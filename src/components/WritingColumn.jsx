@@ -28,6 +28,8 @@ export default function WritingColumn({
   syncState,
   storageNotice,
   firstRun,
+  archiveOpen,
+  onToggleArchive,
 }) {
   const surfaceRef = useRef(null);
   const [draftTag, setDraftTag] = useState('');
@@ -149,6 +151,20 @@ export default function WritingColumn({
 
       <div className="writing__footer">
         <div className="writing__footer-left">
+          {/* Folds the archive away so the page has the window to itself.
+              Same typographic marker as the month headers — en dash open,
+              plus closed. No icon, no chevron. */}
+          <button
+            type="button"
+            className="writing__archive-toggle"
+            onClick={onToggleArchive}
+            aria-expanded={archiveOpen}
+          >
+            <span>Archive</span>
+            <span className="writing__archive-marker" aria-hidden="true">
+              {archiveOpen ? '–' : '+'}
+            </span>
+          </button>
           <div className="writing__word-count">{wordLabel(words)}</div>
           <div
             className={`writing__sweep${saveState !== 'idle' ? ' writing__sweep--out' : ''}`}

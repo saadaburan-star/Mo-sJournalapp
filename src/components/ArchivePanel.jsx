@@ -149,12 +149,20 @@ export default function ArchivePanel({
   openEntryDate,
   onToggleEntry,
   onDeleteEntry,
+  open,
+  sampleCount,
+  onRemoveSamples,
 }) {
   const groups = useMemo(() => groupByMonth(entries), [entries]);
+  const [confirmingSamples, setConfirmingSamples] = useState(false);
   const searching = query.trim().length > 0;
 
   return (
-    <aside className="archive">
+    <aside
+      className={`archive${open ? '' : ' archive--collapsed'}`}
+      aria-hidden={open ? undefined : true}
+      inert={!open}
+    >
       <div className="archive__header">
         <div className="archive__today">
           <span className="archive__today-date">{formatDisplayDate(todayDate)}</span>
@@ -164,6 +172,47 @@ export default function ArchivePanel({
         <div className="archive__section-label">
           {searching ? `${entries.length} found` : 'Archive'}
         </div>
+
+        {/* Offered only while samples remain, so it can never be shown twice. */}
+        {sampleCount > 0 && !searching && (
+          <div className="archive__samples">
+            {confirmingSamples ? (
+              <>
+                <span className="archive__samples-confirm">Remove all {sampleCount}?</span>
+                <button
+                  type="button"
+                  className="entry-row__action entry-row__action--destructive"
+                  onClick={() => {
+                    setConfirmingSamples(false);
+                    onRemoveSamples();
+                  }}
+                >
+                  Remove
+                </button>
+                <button
+                  type="button"
+                  className="entry-row__action"
+                  onClick={() => setConfirmingSamples(false)}
+                >
+                  Keep
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="archive__samples-label">
+                  {sampleCount} sample {sampleCount === 1 ? 'entry' : 'entries'}
+                </span>
+                <button
+                  type="button"
+                  className="entry-row__action"
+                  onClick={() => setConfirmingSamples(true)}
+                >
+                  Remove
+                </button>
+              </>
+            )}
+          </div>
+        )}
 
         <div className="archive__search">
           <label className="archive__search-label" htmlFor="archive-search">

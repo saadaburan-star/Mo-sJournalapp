@@ -14,6 +14,39 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: width var(--dur-fold) var(--ease-sheet);
+}
+
+/* The whole panel folds away, so the writing page can have the window to
+   itself. Same height-transition language as the month folds, on width. */
+.archive--collapsed {
+  width: 0;
+  border-right-width: 0;
+}
+
+.archive__samples {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-12);
+  margin-bottom: var(--space-14);
+}
+
+.archive__samples-label {
+  font-family: var(--font-ui);
+  font-size: var(--size-label-10);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.archive__samples-confirm {
+  font-family: var(--font-ui);
+  font-size: var(--size-label-10);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--error);
+  white-space: nowrap;
 }
 
 .archive__header {
@@ -300,6 +333,10 @@
 @media (max-width: 1023px) {
   .archive {
     width: var(--panel-width-narrow);
+  }
+
+  .archive--collapsed {
+    width: 0;
   }
 
   .archive__header,
